@@ -1,0 +1,588 @@
+---
+openapi: 3.0.0
+info:
+  title: Simple Recipe API
+  description: This is a simple API for our Recipe website
+  contact:
+    x-email: lidorz@post.bgu.ac.il mordomer@post.bgu.ac.il
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/LIDORZ55/Work3.1API/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: https://virtserver.swaggerhub.com/LIDORZ55/TestAPI/1.0.0
+  description: SwaggerHub API Auto Mocking
+tags:
+- name: users
+  description: everything about User
+- name: recipes
+  description: everything about recipes
+- name: auth
+  description: everything about authentication in our site
+paths:
+  /recipes/{recipeId}:
+    get:
+      tags:
+      - recipes
+      summary: find recipe by id from the spoonacular api
+      description: return a specific recipe by id from the spoonacular api
+      parameters:
+      - name: recipeId
+        in: path
+        description: ID of the recipe to return, the ID will be in the path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: succesfull operation - return recipe with the right details from the spoonacular api.
+        "404":
+          description: Recipe not found
+        "500":
+          description: error message
+  /recipes/search/query/{searchQuery}/amount/{num}:
+    get:
+      tags:
+      - recipes
+      summary: searches for recipes based on the {searchQuery} and returns a number of them
+      description: search and return choosen number of recipes based on the {searchQuery} given from the spoonacular api, the number can be either 5/10/15
+      parameters:
+      - name: searchQuery
+        in: path
+        description: the query to send to the search engine of the spoonacular api
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: pasta
+      - name: num
+        in: path
+        description: the amount of recipes to return
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maximum: 15
+          minimum: 5
+          type: integer
+          example: 5
+      - name: cuisine
+        in: query
+        description: from which cuisine do we search recipe from
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: Italic
+      - name: intolerances
+        in: query
+        description: which intolerances to take into account when we search the recipe.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: Dairy
+      - name: diet
+        in: query
+        description: which diet to take into account when we search for a recipe, the recipe must be apart of this diet
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: Ketogenic
+      responses:
+        "200":
+          description: succesfull operation - returns recipes with the right details from the spoonacular api.
+        "404":
+          description: Recipe not found
+        "500":
+          description: error message
+  /recipes/random:
+    get:
+      tags:
+      - recipes
+      summary: get random 3 recipe
+      description: return random 3 recipe objects
+      operationId: Get_Random_3_recipe
+      parameters:
+      - name: user_id
+        in: cookie
+        description: user_id for authentication log in
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: succesfull operation - return 3 random recipies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipes'
+        "400":
+          description: the user dont has any recipe that he watched yet.
+  /users/createRecipe:
+    post:
+      tags:
+      - users
+      summary: create a recipe to add to the DB
+      description: create a new recipe to add to the local DB
+      requestBody:
+        description: Recipe to add to the local DB, and updates the user_created_recipes schema
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/recipes'
+        required: true
+      responses:
+        "200":
+          description: The Recipe successfully added
+        "400":
+          description: invalid input
+        "500":
+          description: error message
+  /users/favorites:
+    get:
+      tags:
+      - users
+      summary: return all the favorites recipes the user favorited
+      description: return all the favorites recipes the user favorited
+      responses:
+        "200":
+          description: succesfull operation - return recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipes'
+        "500":
+          description: error message
+  /users/favoritesIDOnly:
+    get:
+      tags:
+      - users
+      summary: return all the IDs of the favorited recipes the user favorited
+      description: return all the IDs of the favorited recipes the user favorited
+      responses:
+        "200":
+          description: succesfull operation - return recipe IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipes'
+        "500":
+          description: error message
+  /users/favorites1:
+    post:
+      tags:
+      - users
+      summary: marks a recipe as a favorite by the user
+      description: marks a recipe as a favorite by a certain user, and puts it in the favoriterecipes schema
+      parameters:
+      - name: recipeId
+        in: query
+        description: recipe id to add as a favorite
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: The Recipe successfully saved as favorite
+        "500":
+          description: error message
+  /users/recipes:
+    get:
+      tags:
+      - users
+      summary: return all the recipes that a certain user created
+      description: return all the recipes that a user with a certain user_id created
+      responses:
+        "200":
+          description: succesfull operation - return recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipes'
+        "500":
+          description: error message
+  /users/user_last_3_watch:
+    get:
+      tags:
+      - users
+      summary: get user last 3 watched recipe
+      description: return all user last 3 watched recipes
+      operationId: user_last_3_watch
+      parameters:
+      - name: user_id
+        in: cookie
+        description: user_id for get the the specofic user last 3 watched recipe
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: succesfull operation - return user_last_3_watch
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/user_last_3_watch'
+        "400":
+          description: the user dont has any recipe that he watched yet.
+  /users/user_watched_recipe:
+    post:
+      tags:
+      - users
+      summary: Update that the User watched in the recipe
+      description: Update that the User watched in the recipe by user_id
+      operationId: user_watched_recipe
+      parameters:
+      - name: user_id
+        in: cookie
+        description: user_id for get the the specofic user last 3 watched recipe
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: The Recipe successfully update as an watched recipe
+        "400":
+          description: there is no user withe the user_id in the system!
+  /users/user_indication_recipe:
+    get:
+      tags:
+      - users
+      summary: get information about a recipe in relation to a specific user
+      description: get information about a recipe in relation to a specific user, (if the user watched or if the user favorited)
+      operationId: user_indication_recipe
+      parameters:
+      - name: user_id
+        in: cookie
+        description: user_id of the user we want to get recipe information about
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: recipe_id
+        in: query
+        description: recipe_id of the recipe that we want to get information about
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: succesfull operation - return user_indication_recipe
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/user_last_3_watch'
+        "400":
+          description: the user dont has any recipe that he watched yet.
+  /users/user_indication_recipe_NEW:
+    get:
+      tags:
+      - users
+      summary: get information about a recipe in relation to a specific user
+      description: get information about a recipe in relation to a specific user, (if the user watched the recipe only)
+      operationId: user_indication_recipe_NEW
+      parameters:
+      - name: user_id
+        in: cookie
+        description: user_id of the user we want to get recipe information about
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: recipe_id
+        in: query
+        description: recipe_id of the recipe that we want to get information about
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: succesfull operation - return user_indication_recipe_NEW
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/user_last_3_watch'
+        "400":
+          description: the user dont has any recipe that he watched yet.
+  /register:
+    post:
+      tags:
+      - auth
+      summary: Registers a user
+      description: Registers a user and add him to the system
+      requestBody:
+        description: User to add to the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/users'
+        required: true
+      responses:
+        "201":
+          description: User created
+        "400":
+          description: invalid input, object invalid
+        "409":
+          description: Username taken
+        "500":
+          description: error message
+  /login:
+    get:
+      tags:
+      - auth
+      summary: Logins a user
+      description: Logins a user to the system
+      parameters:
+      - name: username
+        in: query
+        description: Username for login
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        description: password for login
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: login succeeded
+        "401":
+          description: Username or Password incorrect
+  /logout:
+    get:
+      tags:
+      - auth
+      summary: Logout a logged user
+      description: Logout an already logged in user
+      responses:
+        "201":
+          description: logout succeeded
+components:
+  schemas:
+    users:
+      required:
+      - country
+      - email
+      - firstname
+      - lastname
+      - password
+      - user_id
+      - username
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: user_id is updated automatically, and is incrementing by 1 each time a new user is added.
+          example: 1
+        username:
+          maxLength: 8
+          minLength: 3
+          type: string
+          description: username contains between 3 to 8 letters only
+          example: lidorzur
+        firstname:
+          type: string
+          description: user's first name
+          example: Lidor
+        lastname:
+          type: string
+          description: user's last name
+          example: Zur
+        country:
+          type: string
+          description: user's country
+          example: Israel
+        password:
+          maxLength: 10
+          minLength: 5
+          type: string
+          description: |
+            password contains between 5 to 10 chars, at least one of them is a number and a special char
+          format: password
+          example: dsadsada
+        email:
+          type: string
+          description: user's email
+          format: email
+          example: lidor@gmail.com
+    recipes:
+      required:
+      - glutenFree
+      - image
+      - ingredients
+      - instructions
+      - numOfDishes
+      - popularity
+      - readyInMinutes
+      - recipe_id
+      - title
+      - vegan
+      - vegetarain
+      type: object
+      properties:
+        recipe_id:
+          type: integer
+          description: id of a recipe
+          example: 324563
+        title:
+          maxLength: 25
+          minLength: 3
+          type: string
+          description: username contains between 3 to 25 letters only
+          example: Hamburger
+        readyInMinutes:
+          type: integer
+          description: the time it takes to make this recipe.
+          example: 33
+        image:
+          type: string
+          description: URL for the user's pic
+          format: URL
+          example: https://cloudinary.com/pic
+        popularity:
+          type: integer
+          description: The popularity number, the amount of likes this recipe has
+          example: 100
+        vegan:
+          type: boolean
+          description: true if vegan, false if not vegan
+          example: true
+        vegetarian:
+          type: boolean
+          description: true if vegetarian, false if not vegetarian
+          example: true
+        glutenFree:
+          type: boolean
+          description: true if gluten free, false if not gluten free
+          example: true
+        ingredients:
+          type: string
+          description: the ingredients of the recipe
+          example: butter 1ts
+        instructions:
+          type: string
+          description: the instructions to make the recipe
+          example: put it in the oven
+        numOfDishes:
+          type: integer
+          description: number of dishes u can make with this recipe
+          example: 20
+    favoriterecipes:
+      required:
+      - recipe_id
+      - user_id
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: the user id that favorited a certain recipe
+          example: 1
+        recipe_id:
+          type: integer
+          description: the recipe id that a user has favorited
+          example: 100
+    user_created_recipes:
+      required:
+      - recipe_id
+      - user_id
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: the user id that created a recipe
+          example: 1
+        recipe_id:
+          type: integer
+          description: the recipe id of the recipe that a user created
+          example: 100
+    user_indication_about_recipe:
+      required:
+      - alreadySaveFlag
+      - alreadyWatchFlag
+      - recipe_id
+      - user_id
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: the user id that saved or watched a recipe
+          example: 1
+        recipe_id:
+          type: integer
+          description: the recipe id of the recipe that a user saved or watched
+          example: 100
+        alreadySaveFlag:
+          type: boolean
+          description: true if a user has saved a certain recipe with (recipe_id), false if not
+          example: true
+        alreadyWatchFlag:
+          type: boolean
+          description: true if a user has watched a certain recipe with (recipe_id), false if not
+          example: true
+    user_last_3_watch:
+      required:
+      - History_Watch_R1
+      - History_Watch_R2
+      - History_Watch_R3
+      - user_id
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: the user id that watched a recipe
+          example: 1
+        History_Watch_R1:
+          type: integer
+          description: the recipe id of the last watched recipe
+          example: 12
+        History_Watch_R2:
+          type: integer
+          description: the recipe id of the 2nd last watched recipe
+          example: 12
+        History_Watch_R3:
+          type: integer
+          description: the recipe id of the 3rd last watched recipe
+          example: 12
